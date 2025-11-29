@@ -1,0 +1,132 @@
+<div class="viewport">
+  <pc-app id="game">
+    <pc-scene></pc-scene>
+  </pc-app>
+</div>
+
+<style>
+  .viewport { position: fixed; inset: 0; }
+  pc-app { display: block; width: 100%; height: 100%; }
+</style>
+
+<script type="module">
+  function onAppReady(cb){
+    const el = document.querySelector('#game');
+    (function wait(){ el.app ? cb(el.app) : requestAnimationFrame(wait); })();
+  }
+
+  onAppReady((app) => {
+    // CAMERA
+    const camera = new pc.Entity('Camera');
+    camera.addComponent('camera', { clearColor: new pc.Color(0.1,0.1,0.12) });
+    camera.setLocalPosition(0, 30, 30);
+    camera.lookAt(0, 0, 0);
+    app.root.addChild(camera);
+
+    // LIGHT
+    const light = new pc.Entity('Light');
+    light.addComponent('light', { type: 'directional', intensity: 1.2 });
+    light.setEulerAngles(45, 30, 0);
+    app.root.addChild(light);
+
+    // GROUND (10 km square)
+    const ground = new pc.Entity('Ground');
+    ground.addComponent('render', { type: 'plane' });
+    ground.setLocalScale(10000, 1, 10000);
+    // simple grid-ish material (optional)
+    app.root.addChild(ground);
+
+    // PLAYER
+    const player = new pc.Entity('Player');
+    player.addComponent('render', { type: 'capsule' });
+    player.setLocalScale(1, 2, 1);
+    app.root.addChild(player);
+
+    // GEO LOOP
+    const R = 6378137; // meters
+    let origin = null; // {lat, lon}
+    let lastXZ = null; // for heading fallback
+    let emaPos = new pc.Vec3(0, 1, 0); // keep player 1m above ground
+
+    const alpha = 0.25;           // smoothing
+    const minMoveMeters = 1.0;    // gate jitter
+
+    function llToXZ(lat0, lon0, lat, lon){
+      const toRad = Math.PI/180;
+      const lat0r = lat0 * toRad;
+      const x = (lon - lon0) * toRad * Math.cos(lat0r) * R; // east (+X)
+      const z = -(lat - lat0) * toRad * R;                  // north (−Z)
+      return { x, z };
+    }
+
+    function setPlayerXZ(x, z){
+      emaPos.x = pc.math.lerp(emaPos.x, x, alpha);
+      emaPos.z = pc.math.lerp(emaPos.z, z, alpha);
+      player.setLocalPosition(emaPos);
+      // keep camera trailing top-down
+      const camOffset = new pc.Vec3(emaPos.x, 30, emaPos.z + 30);
+      camera.setLocalPosition(camOffset);
+      camera.lookAt(emaPos);
+    }
+
+    if (!('geolocation' in navigator)) {
+      console.error('Geolocation not available');
+      return;
+    }
+
+    navigator.geolocation.watchPosition((pos) => {
+      const { latitude: lat, longitude: lon, accuracy, heading, speed } = pos.coords;
+
+      if (!origin) {
+        origin = { lat, lon };
+        setPlayerXZ(0, 0);
+        lastXZ = { x: 0, z: 0 };
+        return;
+      }
+
+      // Convert to local meters
+      const { x, z } = llToXZ(origin.lat, origin.lon, lat, lon);
+
+      // Gate jitter using accuracy and a minimum step
+      const dx = x - lastXZ.x;
+      const dz = z - lastXZ.z;
+      const step = Math.hypot(dx, dz);
+      const gate = Math.max(minMoveMeters, (accuracy || 0) * 0.5);
+
+      if (step >= gate) {
+        setPlayerXZ(x, z);
+
+        // Heading: prefer device heading when moving; else derive from delta
+        let yawDeg;
+        if (Number.isFinite(heading) && (speed || 0) > 0.5) {
+          yawDeg = heading; // degrees, 0=north
+        } else {
+          yawDeg = Math.atan2(dx, -dz) * 180 / Math.PI; // -Z=north
+        }
+        player.setEulerAngles(0, yawDeg, 0);
+
+        lastXZ = { x, z };
+      }
+
+      // Optional floating origin if you roam far
+      const dist = Math.hypot(x, z);
+      if (dist > 5000) { // >5 km from origin
+        // Recenter the world: shift all entities by -emaPos and reset origin
+        const shift = emaPos.clone().scale(-1);
+        app.root.forEach((e) => {
+          const p = e.getPosition && e.getPosition();
+          if (p) e.setPosition(p.x + shift.x, p.y + shift.y, p.z + shift.z);
+        });
+        origin = { lat, lon };
+        emaPos.set(0, emaPos.y, 0);
+        lastXZ = { x: 0, z: 0 };
+      }
+    }, (err) => {
+      console.error('GPS error:', err);
+    }, {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 10000
+    });
+  });
+</script>

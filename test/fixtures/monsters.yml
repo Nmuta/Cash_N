@@ -1,0 +1,12 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+dragon:
+  name: Gold Dragon
+  mesh_name: dragon.glb
+  vice: greed
+
+demon:
+  name: Feast Demon
+  mesh_name: demon.glb
+  vice: gluttony
+

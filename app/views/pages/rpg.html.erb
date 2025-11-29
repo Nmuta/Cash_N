@@ -1,0 +1,457 @@
+<!-- Navigation Bar -->
+<nav class="game-nav">
+  <div class="nav-container">
+    <div class="nav-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="2" x2="12" y2="22"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <span class="brand-text">Ca$h In RPG</span>
+    </div>
+    
+    <div class="nav-menu">
+      <%= link_to "#", class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+        <span>Cash</span>
+      <% end %>
+      
+      <%= link_to "#", class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>Friends</span>
+      <% end %>
+      
+      <%= link_to wizard_path, class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+        </svg>
+        <span>Change Vices</span>
+      <% end %>
+      
+      <%= link_to root_path, class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      <% end %>
+    </div>
+    <div class="nav-user">
+      <div class="user-info">
+        <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="user-email"><%= current_user.email %></span>
+      </div>
+    </div>
+  </div>
+  <div class="user-window-container">
+      <div id="debug-text">
+        Locating...
+      </div>
+      <div id="user-window">
+        <% @vices.each do |v| %>
+          <div>
+            <button
+              type="button"
+              class="vice-button"
+              data-vice-id="<%= v.id %>"
+              data-vice-name="<%= v.name.parameterize %>"
+              data-vice-label="<%= v.name %>"
+              aria-label="<%= v.name %>">
+              <%= image_tag v.image, class: 'vice-thumbnail', alt: v.name %>
+            </button>
+          </div>
+        <% end %>
+      </div>
+      <div id="action-window">
+        <div class="action-placeholder">Select a vice to see action steps.</div>
+      </div>
+      <div id="place-window">
+        Place window
+      </div>
+  </div>
+</nav>
+
+<!-- Game Container -->
+<div class="game-container">
+  <iframe
+    id="rpg-frame"
+    src="/rpg/cash/Ca$h_N/index.html"
+    width="100%"
+    height="100%"
+    frameborder="0"
+    allowfullscreen></iframe>
+  <button id="send-message-button" class="send-message-button">
+    Send message to game
+  </button>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const iframe = document.getElementById('rpg-frame');
+    const button = document.getElementById('send-message-button');
+    const origin = window.location.origin;
+    const fallbackOrigin =
+      origin.includes('127.0.0.1') ? origin.replace('127.0.0.1', 'localhost') : origin.replace('localhost', '127.0.0.1');
+    const allowedOrigins = new Set([origin, fallbackOrigin]);
+    let gameReady = false;
+
+    const postToGame = (payload) => {
+      if (!iframe || !iframe.contentWindow) {
+        console.warn('[CashIn RPG] iframe not ready for messaging');
+        return;
+      }
+      iframe.contentWindow.postMessage(payload, origin);
+    };
+
+    const sendHandshake = () => {
+      postToGame({
+        target: 'rpg-game',
+        type: 'handshake',
+        timestamp: Date.now(),
+      });
+    };
+
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        console.log('[CashIn RPG] iframe load detected, sending handshake');
+        sendHandshake();
+      });
+    }
+
+    if (button) {
+      button.addEventListener('click', () => {
+        if (!gameReady) {
+          console.warn('[CashIn RPG] Game not ready yet; attempting handshake.');
+          sendHandshake();
+        }
+        postToGame({
+          target: 'rpg-game',
+          type: 'ui-event',
+          message: 'Hello from the Cash In UI!',
+          timestamp: Date.now(),
+        });
+      });
+    }
+
+    window.addEventListener('message', (event) => {
+
+      if (!allowedOrigins.has(event.origin)) return;
+      const data = event.data;
+      if (!data || data.target !== 'cash-in-ui') return;
+      if (data.type === 'ack' && data.echo?.type === 'handshake') {
+        gameReady = true;
+        console.log('[CashIn RPG] Handshake acknowledged by game');
+      }
+      console.log('[CashIn RPG] Payload from game:', data);
+    });
+  });
+</script>
+
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: linear-gradient(135deg, #1a0f00 0%, #331a00 50%, #4d2600 100%);
+    min-height: 100vh;
+  }
+
+  /* Navigation Styles */
+  .game-nav {
+    background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
+    box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .user-window-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .vice-button {
+    border: none;
+    padding: 4px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    touch-action: manipulation;
+  }
+
+  .vice-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .vice-button:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35);
+  }
+
+  .vice-button:focus-visible {
+    outline: 2px solid #ffbf4d;
+    outline-offset: 2px;
+  }
+
+  .vice-thumbnail {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  #debug-text, #user-window, #action-window, #place-window {
+    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.25;
+    white-space: pre-line;
+    background: rgba(0, 0, 0, 0.65);
+    color: #00e6ff;
+    padding: 8px 10px;
+    border-radius: 6px;
+    max-width: 320px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  #user-window {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  #action-window {
+    min-width: 240px;
+  }
+
+  .action-header {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+    color: #ffbf4d;
+  }
+
+  .action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .action-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .action-item input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: #ff8c00;
+  }
+
+  .action-item span {
+    color: #f8f8f8;
+  }
+
+  .action-placeholder {
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+  }
+
+  .nav-brand {
+    display: none;
+    <%# display: flex; %>
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-weight: 800;
+    font-size: 24px;
+  }
+
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .brand-icon svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+  }
+
+  .brand-text {
+    letter-spacing: -0.5px;
+  }
+
+  .nav-menu {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+  }
+
+  .user-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .user-email {
+    font-weight: 500;
+  }
+
+  /* Game Container */
+  .game-container {
+    width: 100%;
+    height: calc(100vh - 72px);
+    position: relative;
+    display: grid;
+    grid-template-columns: 80% 20%;
+  }
+
+  .game-container .left-panel {
+    background-color: yellow;
+  }
+
+  .game-container .right-panel {
+    background-color: pink;
+  }
+
+
+  pc-app {
+    display: block;
+    width: auto;
+    height: 100%;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .nav-container {
+      padding: 12px 20px;
+      flex-wrap: wrap;
+    }
+
+    .nav-menu {
+      order: 3;
+      width: 100%;
+      justify-content: space-around;
+      gap: 4px;
+    }
+
+    .nav-link span {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 10px;
+      min-width: 44px;
+      justify-content: center;
+    }
+
+    .user-email {
+      display: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .nav-brand {
+      font-size: 20px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .game-container {
+      height: calc(100vh - 120px);
+    }
+  }
+</style>

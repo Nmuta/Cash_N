@@ -1,0 +1,8 @@
+git lfs track "public/rpg/dialogi/Game.app/**"
+
+
+git add .gitattributes
+git add path/to/large-file
+git commit -m "Add large asset via LFS"
+git push origin <branch>
+

@@ -1,0 +1,679 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Logo/Title Section -->
+    <div class="auth-header">
+      <div class="logo-circle">
+        <svg class="dollar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="2" x2="12" y2="22"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <h1 class="auth-title">Ca$h In</h1>
+      <p class="auth-subtitle">
+      <% if user_signed_in? %>
+        YOUR ARE LOGGED IN AS <%= current_user.email %>
+      <% else %>
+        Enter the game. Make your move.
+      <% end %>
+ 
+    </div>
+
+    <!-- Flash Messages -->
+    <% if notice %>
+      <div class="alert alert-success"><%= notice %></div>
+    <% end %>
+    <% if alert %>
+      <div class="alert alert-error"><%= alert %></div>
+    <% end %>
+
+    <!-- Tab Switcher (only show when logged out) -->
+    <% if !user_signed_in? %>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="signin-tab" onclick="switchTab('signin')">Sign In</button>
+        <button class="auth-tab" id="signup-tab" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+    <% end %>
+
+    <!-- Logged In User Actions -->
+    <% if user_signed_in? %>
+      <div class="user-actions">
+        <% if current_user.wizard_finished? %>
+          <!-- User has chosen vices -->
+          <div class="action-buttons">
+            <%= link_to game_path, class: 'action-btn primary-btn' do %>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Play Now
+            <% end %>
+            <%= link_to wizard_path, class: 'action-btn secondary-btn' do %>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+              </svg>
+              Reset Vices
+            <% end %>
+          </div>
+        <% else %>
+          <!-- User has NOT chosen vices -->
+          <div class="action-buttons">
+            <%= link_to wizard_path, class: 'action-btn primary-btn full-width' do %>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                <path d="M4 22h16"></path>
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+              </svg>
+              Choose Your Vices
+            <% end %>
+          </div>
+        <% end %>
+        
+        <!-- Sign Out Button -->
+        <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: 'sign-out-btn', form: { class: 'sign-out-form', data: { turbo: 'false' } } %>
+      </div>
+    <% else %>
+      <%= form_for(User.new, as: :user, url: user_session_path, html: { class: 'auth-form', id: 'signin-form', data: { turbo: false } }) do |f| %>
+        <div class="form-group">
+          <%= f.label :email, class: 'form-label' %>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <%= f.email_field :email, autofocus: true, autocomplete: "email", class: 'form-input', placeholder: 'player@cashin.game', required: true %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :password, class: 'form-label' %>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <%= f.password_field :password, autocomplete: "current-password", class: 'form-input', placeholder: '••••••••', required: true %>
+          </div>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label">
+            <%= f.check_box :remember_me, class: 'form-checkbox' %>
+            <span>Remember me</span>
+          </label>
+          <%= link_to "Forgot password?", new_user_password_path, class: 'forgot-link' %>
+        </div>
+
+        <%= f.submit "Sign In", class: 'submit-btn-text' %>
+      <% end %>
+    <% end %>
+
+    <!-- Sign Up Form (Hidden by default) -->
+    <%= form_for(User.new, as: :user, url: user_registration_path, html: { class: 'auth-form hidden', id: 'signup-form', data: { turbo: false } }) do |f| %>
+      <div class="form-group">
+        <%= f.label :email, class: 'form-label' %>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: 'form-input', placeholder: 'player@cashin.game', required: true %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :password, class: 'form-label' %>
+        <% if @minimum_password_length %>
+          <em class="password-hint">(<%= @minimum_password_length %> characters minimum)</em>
+        <% end %>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <%= f.password_field :password, autocomplete: "new-password", class: 'form-input', placeholder: '••••••••', required: true %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :password_confirmation, "Confirm Password", class: 'form-label' %>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password", class: 'form-input', placeholder: '••••••••', required: true %>
+        </div>
+      </div>
+
+      <%= f.submit "Create Account", class: 'submit-btn-text' %>
+    <% end %>
+
+    <!-- Footer -->
+    <div class="auth-footer">
+      <p class="footer-text">
+        Need help? <a href="#" class="footer-link">Contact Support</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Decorative Elements -->
+  <div class="floating-coins">
+    <div class="coin coin-1">$</div>
+    <div class="coin coin-2">$</div>
+    <div class="coin coin-3">$</div>
+    <div class="coin coin-4">$</div>
+    <div class="coin coin-5">$</div>
+  </div>
+</div>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+
+  .auth-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 48px 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 
+                0 0 100px rgba(16, 185, 129, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #10b981 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -100% 0; }
+    100% { background-position: 100% 0; }
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .logo-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .dollar-icon {
+    width: 40px;
+    height: 40px;
+    color: white;
+  }
+
+  .auth-title {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 8px;
+    letter-spacing: -1px;
+  }
+
+  .auth-subtitle {
+    color: #64748b;
+    font-size: 16px;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  /* Flash Messages */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .alert-success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+  }
+
+  .alert-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .auth-tab.active {
+    background: white;
+    color: #10b981;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .auth-form {
+    transition: opacity 0.3s ease;
+  }
+
+  .auth-form.hidden {
+    display: none;
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+  }
+
+  .password-hint {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  .input-wrapper {
+    position: relative;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+    pointer-events: none;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 14px 16px 14px 48px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #1e293b;
+    transition: all 0.3s ease;
+    background: white;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  .form-input::placeholder {
+    color: #cbd5e1;
+  }
+
+  .form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #64748b;
+    cursor: pointer;
+  }
+
+  .form-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #10b981;
+  }
+
+  .forgot-link, .inline-link {
+    font-size: 14px;
+    color: #10b981;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+
+  .forgot-link:hover, .inline-link:hover {
+    color: #059669;
+  }
+
+  /* User Actions Styles */
+  .user-actions {
+    width: 100%;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+  }
+
+  .action-btn.full-width {
+    flex: none;
+    width: 100%;
+  }
+
+  .primary-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  }
+
+  .primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+  }
+
+  .secondary-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  }
+
+  .secondary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.4);
+  }
+
+  .action-btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sign-out-form {
+    margin: 0;
+  }
+
+  .sign-out-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 2px solid #ef4444;
+    border-radius: 12px;
+    color: #ef4444;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .sign-out-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .submit-btn-text {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  }
+
+  .submit-btn-text:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+  }
+
+  .submit-btn-text:active {
+    transform: translateY(0);
+  }
+
+  .auth-footer {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+  }
+
+  .footer-text {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .footer-link {
+    color: #10b981;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+
+  .footer-link:hover {
+    color: #059669;
+  }
+
+  /* Floating Coins Animation */
+  .floating-coins {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .coin {
+    position: absolute;
+    font-size: 48px;
+    color: rgba(16, 185, 129, 0.15);
+    font-weight: bold;
+    animation: float-coin 20s linear infinite;
+  }
+
+  .coin-1 {
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 15s;
+  }
+
+  .coin-2 {
+    left: 30%;
+    animation-delay: 3s;
+    animation-duration: 18s;
+  }
+
+  .coin-3 {
+    left: 50%;
+    animation-delay: 6s;
+    animation-duration: 20s;
+  }
+
+  .coin-4 {
+    left: 70%;
+    animation-delay: 9s;
+    animation-duration: 16s;
+  }
+
+  .coin-5 {
+    left: 90%;
+    animation-delay: 12s;
+    animation-duration: 19s;
+  }
+
+  @keyframes float-coin {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.3;
+    }
+    90% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translateY(-100px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 480px) {
+    .auth-card {
+      padding: 32px 24px;
+    }
+
+    .auth-title {
+      font-size: 28px;
+    }
+
+    .logo-circle {
+      width: 64px;
+      height: 64px;
+    }
+
+    .dollar-icon {
+      width: 32px;
+      height: 32px;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .action-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  function switchTab(tab) {
+    const signinTab = document.getElementById('signin-tab');
+    const signupTab = document.getElementById('signup-tab');
+    const signinForm = document.getElementById('signin-form');
+    const signupForm = document.getElementById('signup-form');
+    
+    // Check if forms exist (they won't when user is logged in)
+    if (!signinForm || !signupForm) {
+      return; // Exit early if forms don't exist
+    }
+    
+    if (tab === 'signin') {
+      signinTab.classList.add('active');
+      signupTab.classList.remove('active');
+      signinForm.classList.remove('hidden');
+      signupForm.classList.add('hidden');
+    } else {
+      signupTab.classList.add('active');
+      signinTab.classList.remove('active');
+      signupForm.classList.remove('hidden');
+      signinForm.classList.add('hidden');
+    }
+  }
+</script>
+

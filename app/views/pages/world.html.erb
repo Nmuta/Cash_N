@@ -1,0 +1,412 @@
+<!-- Navigation Bar -->
+<nav class="game-nav">
+  <div class="nav-container">
+    <div class="nav-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="2" x2="12" y2="22"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <span class="brand-text">Ca$h In v 11.15-7:30pm</span>
+    </div>
+    
+    <div class="nav-menu">
+      <%= link_to "#", class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+        <span>Cash</span>
+      <% end %>
+      
+      <%= link_to "#", class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>Friends</span>
+      <% end %>
+      
+      <%= link_to wizard_path, class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+        </svg>
+        <span>Change Vices</span>
+      <% end %>
+      
+      <%= link_to root_path, class: 'nav-link' do %>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      <% end %>
+
+
+    </div>
+    <div id="debug-text">
+      Awaiting GPS data...
+    </div>
+    
+    <div class="nav-user">
+      <div class="user-info">
+        <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="user-email"><%= current_user.email %></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<style>
+  #debug-text {
+    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.25;
+    white-space: pre-line;
+    background: rgba(0, 0, 0, 0.65);
+    color: #00e6ff;
+    padding: 8px 10px;
+    border-radius: 6px;
+    max-width: 320px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+</style>
+
+<!-- Game Container -->
+<div class="game-container">
+  <script>
+    console.log("Vices being passed to PlayCanvas:", <%= raw @vices.to_json %>);
+  </script>
+  
+  <pc-app>
+    <pc-asset id="maleAvatarWarriorIdle" src="/meshes/RunOnly.glb"></pc-asset>
+    <pc-asset src="<%= asset_path('play-canvas-scripts/material.mjs') %>"></pc-asset>
+    <pc-asset src="<%= asset_path('play-canvas-scripts/create-box.mjs') %>"></pc-asset>
+    <pc-asset src="<%= asset_path('play-canvas-scripts/create-house.mjs') %>"></pc-asset>
+    <pc-asset src="<%= asset_path('play-canvas-scripts/player-geolocation.mjs') %>"></pc-asset>
+    <pc-asset src="<%= asset_path('play-canvas-scripts/player-device-orientation.mjs') %>"></pc-asset>
+    <pc-asset src="<%= asset_path('play-canvas-scripts/coordinate-grid-markers.mjs') %>"></pc-asset>
+    <pc-asset src="<%= asset_path('sky-gradient.mjs') %>"></pc-asset>
+     
+    <pc-scene>
+        <pc-entity name="camera" position="0 5 5" rotation="-5 0 0">
+            <pc-camera clear-color="0.2 0.2 0.3 1"></pc-camera>
+        </pc-entity>
+
+        <pc-entity name="light" rotation="45 45 0">
+            <pc-light type="directional" color="1 1 1" intensity="1"></pc-light>
+        </pc-entity>
+
+        <%# <pc-entity name="coordinate-markers">
+          <pc-scripts>
+            <pc-script name="coordinateGridMarkers" attributes='{
+                      "gridMin": -100,
+                      "gridMax": 100,
+                      "gridStep": 10,
+                      "markerSize": 4,
+                      "markerHeight": 6,
+                      "markerYOffset": 3,
+                      "useSpriteSheet": false,
+                      "useGradientColor": true,
+                      "skipRadius": 12,
+                      "skipCenterX": 0,
+                      "skipCenterZ": 0
+                  }'></pc-script>
+          </pc-scripts>
+        </pc-entity> %>
+
+     <!-- SOLID FLOOR -->
+    <pc-entity name="floor" position="0 -3 -2" rotation="0 0 0">
+      <!-- 100 x 2.5 x 100 world units -->
+      <pc-collision type="box" half-extents="100 2.5 100"></pc-collision>
+      <pc-rigidbody type="static" friction="0.8" restitution="0"></pc-rigidbody>
+      
+      <!-- Visual child sized to match the collider (scale = 2 * half-extents) -->
+      <pc-entity name="floor-visual" rotation="0 0 0" scale="200 5 200">
+        <pc-scripts>
+          <pc-script name="createBoxScript"></pc-script>
+        </pc-scripts>
+      </pc-entity>
+    </pc-entity>
+
+ 
+      
+
+      <!-- PLAYER entity without physics (geolocation-driven) -->
+      <pc-entity name="player" position="0 -0.5 -12" rotation="0 180 0">
+        <pc-scripts>
+          <pc-script name="playerGeolocation" attributes='{
+                    "cameraHeight": 8,
+                    "cameraDistance": 8,
+                    "cameraHorizontalOffset": 0,
+                    "cameraLookAtOffset": 1.5,
+                    "cameraFollowLerp": 0.12,
+                    "smoothing": 0.25,
+                    "minMoveMeters": 1.0,
+                    "accuracyGateFactor": 0.5,
+                    "headingSpeedThreshold": 0.5,
+                    "headingOffset": 0
+                }'></pc-script>
+          <pc-script name="playerDeviceOrientation" attributes='{
+                    "headingOffset": 0,
+                    "smoothing": 0.35,
+                    "deadZoneDegrees": 1,
+                    "allowRelativeHeading": false
+                }'></pc-script>
+          <pc-script name="playerController" attributes='{
+                    "defaultAnimation": "TreadWater"
+                }'></pc-script>
+        </pc-scripts>
+
+        <!-- Visual child gets the tiny scale -->
+        <pc-entity name="player-visual" scale="0.05 0.05 0.05">
+          <pc-model asset="maleAvatarWarriorIdle"></pc-model>
+          <pc-anim speed="1" activate="true"></pc-anim>
+        </pc-entity>
+      </pc-entity>
+
+      <!-- Simple stonehenge-like structure -->
+      <pc-entity name="stonehedge" position="0 0 -16">
+        <pc-scripts>
+          <pc-script name="createHouseScript"></pc-script>
+        </pc-scripts>
+      </pc-entity>
+
+           <!-- Simple stonehenge-like structure -->
+      <pc-entity name="stonehedge" position="0 0 -20">
+        <pc-scripts>
+          <pc-script name="createHouseScript"></pc-script>
+        </pc-scripts>
+      </pc-entity>
+
+
+                 <!-- Simple stonehenge-like structure -->
+      <pc-entity name="stonehedge" position="20 0 -20">
+        <pc-scripts>
+          <pc-script name="createHouseScript"></pc-script>
+        </pc-scripts>
+      </pc-entity>
+
+
+
+                 <!-- Simple stonehenge-like structure -->
+      <pc-entity name="stonehedge" position="10 0 -28">
+        <pc-scripts>
+          <pc-script name="createHouseScript"></pc-script>
+        </pc-scripts>
+      </pc-entity>
+
+
+
+                       <!-- Simple stonehenge-like structure -->
+      <pc-entity name="stonehedge" position="100 0 -28">
+        <pc-scripts>
+          <pc-script name="createHouseScript"></pc-script>
+        </pc-scripts>
+      </pc-entity>
+        
+        
+        
+ 
+    </pc-scene>
+  </pc-app>
+</div>
+
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: linear-gradient(135deg, #1a0f00 0%, #331a00 50%, #4d2600 100%);
+    min-height: 100vh;
+  }
+
+  /* Navigation Styles */
+  .game-nav {
+    background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
+    box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-weight: 800;
+    font-size: 24px;
+  }
+
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .brand-icon svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+  }
+
+  .brand-text {
+    letter-spacing: -0.5px;
+  }
+
+  .nav-menu {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+  }
+
+  .user-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .user-email {
+    font-weight: 500;
+  }
+
+  /* Game Container */
+  .game-container {
+    width: 100%;
+    height: 80vh;
+    max-height: 80vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  pc-app {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: 80vh;
+  }
+
+  pc-app canvas {
+    display: block;
+    width: 100% !important;
+    height: 80vh !important;
+    max-height: 80vh !important;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .nav-container {
+      padding: 12px 20px;
+      flex-wrap: wrap;
+    }
+
+    .nav-menu {
+      order: 3;
+      width: 100%;
+      justify-content: space-around;
+      gap: 4px;
+    }
+
+    .nav-link span {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 10px;
+      min-width: 44px;
+      justify-content: center;
+    }
+
+    .user-email {
+      display: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .nav-brand {
+      font-size: 20px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .game-container {
+      height: calc(100vh - 120px);
+    }
+  }
+</style>

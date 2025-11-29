@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CashIn</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+       <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "https://cdn.jsdelivr.net/npm/playcanvas@latest/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <!-- Load ammo.js physics engine globally and wait for it to be ready -->
+        <script src="/ammo/ammo.wasm.js"></script>
+        <script type="module">
+          // Wait for Ammo to be ready before loading PlayCanvas web components
+          if (typeof Ammo === 'function') {
+            Ammo().then(function(AmmoLib) {
+              // Replace the Ammo function with the actual library
+              window.Ammo = AmmoLib;
+              console.log('Ammo.js physics engine loaded and ready');
+              
+              // Now load PlayCanvas web components
+              import('https://cdn.jsdelivr.net/npm/@playcanvas/web-components@latest/dist/pwc.mjs');
+            });
+          } else {
+            console.error('Ammo.js failed to load');
+            // Load PlayCanvas anyway without physics
+            import('https://cdn.jsdelivr.net/npm/@playcanvas/web-components@latest/dist/pwc.mjs');
+          }
+        </script>
+
+  </head>
+
+  <body>
+    <%= yield %>
+  </body>
+</html>

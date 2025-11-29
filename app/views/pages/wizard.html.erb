@@ -1,0 +1,497 @@
+<div class="wizard-container">
+  <div class="wizard-content">
+    <!-- Header Section -->
+    <div class="wizard-header">
+      <div class="logo-circle">
+        <svg class="trophy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+          <path d="M4 22h16"></path>
+          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+        </svg>
+      </div>
+      <h1 class="wizard-title">Choose Your Adversaries</h1>
+      <p class="wizard-subtitle">Select the vices you want to conquer. Each vice becomes a monster you'll face in the game.</p>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <p class="selection-count" id="selection-count">0 vices selected</p>
+
+    <!-- Vice Selection Form -->
+    <%= form_with url: wizard_submit_path, method: :post, html: { class: 'wizard-form', id: 'wizard-form' } do |f| %>
+      <div class="vices-grid">
+        <% @vices.each do |vice| %>
+          <div class="vice-card" data-vice-id="<%= vice.id %>">
+            <input 
+              type="checkbox" 
+              name="vice_ids[]" 
+              value="<%= vice.id %>" 
+              id="vice_<%= vice.id %>" 
+              class="vice-checkbox"
+              <%= 'checked' if @user_vice_ids.include?(vice.id) %>
+            >
+            <label for="vice_<%= vice.id %>" class="vice-label">
+              <div class="vice-image-container">
+                <% if vice.image.present? %>
+                  <%= image_tag vice.image, alt: vice.name, class: 'vice-image', onerror: "this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"%3E%3Crect fill=\"%2310b981\" width=\"200\" height=\"200\"/%3E%3Ctext x=\"50%25\" y=\"50%25\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"80\" fill=\"white\"%3E' + this.alt.charAt(0) + '%3C/text%3E%3C/svg%3E';" %>
+                <% else %>
+                  <div class="vice-image-placeholder">
+                    <span class="vice-initial"><%= vice.name.first %></span>
+                  </div>
+                <% end %>
+                <div class="vice-checkmark">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="vice-info">
+                <h3 class="vice-name"><%= vice.name %></h3>
+                <p class="vice-description"><%= vice.description %></p>
+              </div>
+            </label>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="wizard-footer">
+        <%= f.submit "Continue to Game", class: 'wizard-submit-btn', id: 'submit-btn' %>
+        <p class="wizard-hint">You can change your selections anytime</p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Floating Background Elements -->
+  <div class="floating-elements">
+    <div class="float-element element-1">⚔️</div>
+    <div class="float-element element-2">🛡️</div>
+    <div class="float-element element-3">⚡</div>
+    <div class="float-element element-4">🔥</div>
+    <div class="float-element element-5">💎</div>
+  </div>
+</div>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .wizard-container {
+    width: 100%;
+    min-height: 100vh;
+    padding: 40px 20px;
+    position: relative;
+  }
+
+  .wizard-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header Styles */
+  .wizard-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .trophy-icon {
+    width: 40px;
+    height: 40px;
+    color: white;
+  }
+
+  .wizard-title {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 16px;
+    letter-spacing: -1px;
+  }
+
+  .wizard-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 18px;
+    margin: 0;
+    font-weight: 500;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Progress Bar */
+  .progress-bar {
+    width: 100%;
+    max-width: 600px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin: 0 auto 12px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .selection-count {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 32px;
+  }
+
+  /* Vices Grid */
+  .vices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .vice-card {
+    position: relative;
+  }
+
+  .vice-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .vice-label {
+    display: block;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 3px solid transparent;
+    height: 100%;
+  }
+
+  .vice-label:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
+  }
+
+  .vice-checkbox:checked + .vice-label {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  }
+
+  .vice-image-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  }
+
+  .vice-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .vice-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+
+  .vice-initial {
+    font-size: 64px;
+    font-weight: 800;
+    color: white;
+  }
+
+  .vice-checkmark {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s ease;
+  }
+
+  .vice-checkmark svg {
+    width: 20px;
+    height: 20px;
+    color: #10b981;
+  }
+
+  .vice-checkbox:checked + .vice-label .vice-checkmark {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .vice-info {
+    text-align: left;
+  }
+
+  .vice-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 8px;
+  }
+
+  .vice-description {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Footer Styles */
+  .wizard-footer {
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .wizard-submit-btn {
+    width: 100%;
+    padding: 18px 32px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    margin-bottom: 12px;
+  }
+
+  .wizard-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
+  }
+
+  .wizard-submit-btn:active {
+    transform: translateY(0);
+  }
+
+  .wizard-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .wizard-hint {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* Floating Elements */
+  .floating-elements {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .float-element {
+    position: absolute;
+    font-size: 48px;
+    opacity: 0.1;
+    animation: float-element 20s linear infinite;
+  }
+
+  .element-1 {
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 15s;
+  }
+
+  .element-2 {
+    left: 30%;
+    animation-delay: 3s;
+    animation-duration: 18s;
+  }
+
+  .element-3 {
+    left: 50%;
+    animation-delay: 6s;
+    animation-duration: 20s;
+  }
+
+  .element-4 {
+    left: 70%;
+    animation-delay: 9s;
+    animation-duration: 16s;
+  }
+
+  .element-5 {
+    left: 90%;
+    animation-delay: 12s;
+    animation-duration: 19s;
+  }
+
+  @keyframes float-element {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.1;
+    }
+    90% {
+      opacity: 0.1;
+    }
+    100% {
+      transform: translateY(-100px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .wizard-title {
+      font-size: 32px;
+    }
+
+    .wizard-subtitle {
+      font-size: 16px;
+    }
+
+    .vices-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .vice-image-container {
+      height: 200px;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .vices-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .vices-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('wizard-form');
+    const checkboxes = document.querySelectorAll('.vice-checkbox');
+    const progressFill = document.getElementById('progress-fill');
+    const selectionCount = document.getElementById('selection-count');
+    const submitBtn = document.getElementById('submit-btn');
+    const totalVices = checkboxes.length;
+
+    function updateProgress() {
+      const checkedCount = document.querySelectorAll('.vice-checkbox:checked').length;
+      const percentage = (checkedCount / totalVices) * 100;
+      
+      progressFill.style.width = percentage + '%';
+      selectionCount.textContent = checkedCount + ' vice' + (checkedCount !== 1 ? 's' : '') + ' selected';
+      
+      // Optional: Enable/disable submit button based on selection
+      // submitBtn.disabled = checkedCount === 0;
+    }
+
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateProgress);
+    });
+
+    // Initialize on page load
+    updateProgress();
+
+    // Smooth scroll animation for cards
+    const cards = document.querySelectorAll('.vice-card');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }, index * 50);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    cards.forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(card);
+    });
+  });
+</script>
+
