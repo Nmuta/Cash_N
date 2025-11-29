@@ -21,4 +21,12 @@ Rails.application.routes.draw do
   get "roota" => "pages#game", as: :roota
   get "friends" => "pages#friends", as: :friends
   get "rpg" => "pages#rpg", as: :rpg
+  
+  # API endpoints for RPG game integration
+  namespace :api do
+    get "player_data" => "rpg#player_data", as: :player_data
+  end
+  
+  # Serve modified RPG game index.html with integration
+  get "rpg/cash/Ca$h_N/index.html" => "pages#rpg_game_index", as: :rpg_game_index
 end

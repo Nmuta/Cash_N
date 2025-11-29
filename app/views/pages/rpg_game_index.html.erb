@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="viewport" content="user-scalable=no">
+        <meta name="csrf-token" content="<%= form_authenticity_token %>">
+        <link rel="icon" href="/rpg/cash/Ca$h_N/icon/icon.png" type="image/png">
+        <link rel="apple-touch-icon" href="/rpg/cash/Ca$h_N/icon/icon.png">
+        <link rel="stylesheet" type="text/css" href="/rpg/cash/Ca$h_N/css/game.css">
+        <title>Ca$h_N</title>
+    </head>
+    <body style="background-color: black">
+        <script type="text/javascript" src="/rpg/cash/Ca$h_N/js/main.js"></script>
+        <!-- Map object helpers - loaded before integration -->
+        <script type="text/javascript" src="/rpg/cash/map_object_helpers.js"></script>
+        <!-- Custom integration script - loaded AFTER main.js -->
+        <script type="text/javascript" src="/rpg/cash/cash_integration.js"></script>
+    </body>
+</html>
+

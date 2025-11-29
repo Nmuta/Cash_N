@@ -45,4 +45,10 @@ class PagesController < ApplicationController
     @vices = current_user.vices || []
   end
 
+  def rpg_game_index
+    # Serve a modified version of the RPG game's index.html
+    # that includes our custom integration script
+    render file: Rails.root.join('app', 'views', 'pages', 'rpg_game_index.html.erb'), layout: false
+  end
+
 end
